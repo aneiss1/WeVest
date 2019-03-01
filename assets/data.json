@@ -1,0 +1,77 @@
+{
+  "000001": {
+    "Trading": {
+      "Funder": "000004",
+      "Uninvested Funds": 8.52,
+      "Watchlist": ["SPY", "INTC", "AAPL"],
+      "Investments": {
+        "AMD": 8,
+        "GE": 19
+      }
+
+    },
+    "Investing": ["000002", "000003"],
+    "Profile": {
+      "First Name": "James",
+      "Last Name": "Bond",
+      "Alias": "007mi6",
+      "Email": "james.bond@gmail.com",
+      "Phone Number": 3015550123,
+      "Address": "1600 Pennsylvania Ave NW"
+    },
+    "Banking": {
+      "Investor Level": 500,
+      "Trader Level": 250
+    }
+  },
+  "000002": {
+    "Trading": {
+      "Funder": "000001",
+      "Uninvested Funds": 13.64,
+      "Watchlist": ["SQQQ", "GOOG", "AAPL", "DIS", "UWT"],
+      "Investments": {
+        "WATT": 24,
+        "FB": 1
+      }
+
+    },
+    "Investing": [],
+    "Profile": {
+      "First Name": "General",
+      "Last Name": "Gogol",
+      "Alias": "kGb1",
+      "Email": "general.gogol@gmail.com",
+      "Phone Number": 3015550123,
+      "Address": "1600 Pennsylvania Ave NW, Washington, DC 20500"
+    },
+    "Banking": {
+      "Investor Level": "NA",
+      "Trader Level": 250
+    }
+  },
+  "000003": {
+    "Trading": {
+      "Funder": "000001",
+      "Uninvested Funds": 2.33,
+      "Watchlist": ["AMZN", "INTC", "AAPL", "COST", "DWT"],
+      "Investments": {
+        "ONVO": 200,
+        "TMUS": 1
+      }
+
+    },
+    "Investing": ["000002", "000003"],
+    "Profile": {
+      "First Name": "René",
+      "Last Name": "Mathis",
+      "Alias": "007mi6",
+      "Email": "Rene.Mathis@gmail.com",
+      "Phone Number": 3015550123,
+      "Address": "1600 Pennsylvania Ave NW, Washington, DC 20500"
+    },
+    "Banking": {
+      "Investor Level": "NA",
+      "Trader Level": 250
+    }
+  }
+}
