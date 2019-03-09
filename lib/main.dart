@@ -13,36 +13,41 @@ import 'settings.dart';
 import 'account.dart';
 import 'research.dart';
 import 'home.dart';
-import 'login.dart';
+import 'landing.dart';
 import 'auth.dart';
 import 'signup.dart';
 import 'next.dart';
 import 'banking.dart';
 import 'welcome.dart';
+import 'services/authentication.dart';
+import 'pages/root_page.dart';
+import 'package:we_vest/pages/create.dart';
 
 AuthService appAuth = new AuthService();
 
 void main() async {
   // Set default home.
-  Widget _defaultHome = new LoginPage();
+  //Widget _defaultHome = new LoginPage();// new RootPage(auth: new Auth()));
 
   // Get result of the login function.
-  bool _result = await appAuth.login();
+/*  bool _result = await appAuth.login();
   print(_result);
   if (_result) {
     _defaultHome = new HomePage();
-  }
+  }*/
 
   runApp(new MaterialApp(
-    home: _defaultHome,
+    home: new RootPage(auth: new Auth(), type: "log"),//_defaultHome,
     routes: <String, WidgetBuilder>{
       // Set routes for using the Navigator.
+      '/root': (BuildContext context) => new RootPage(auth: new Auth(), type: "log"),
       '/home': (BuildContext context) => new HomePage(),
-      '/login': (BuildContext context) => new LoginPage(),
+      '/landing': (BuildContext context) => new LandingPage(),
       '/signup': (BuildContext context) => new SignUpPage(),
-      '/next': (BuildContext context) => new NextPage(),
-      '/bank': (BuildContext context) => new BankingPage(),
+      '/next': (BuildContext context) => new RootPage(auth: new Auth(), type: "next"),
+      '/bank': (BuildContext context) => new RootPage(auth: new Auth(), type: "bank"),
       '/welcome': (BuildContext context) => new WelcomePage(),
+      '/create': (BuildContext context) => new RootPage(auth: new Auth(), type: "create"),
     },
     //home: new HomePage(),
     title: 'WeVest',
@@ -54,13 +59,25 @@ void main() async {
 }
 
 class HomePage extends StatefulWidget {
+  HomePage({Key key, this.auth, this.userId, this.onSignedOut})
+      : super(key: key);
+
+  final BaseAuth auth;
+  final VoidCallback onSignedOut;
+  final String userId;
+
   @override
-  HomePageState createState() => new HomePageState();
+  HomePageState createState() => new HomePageState(this.auth, this.userId, this.onSignedOut);
 }
 
 class HomePageState extends State<HomePage> {
   var _isLoading = true;
   List data = List<double>.generate(78, (i) => 0.0);
+  String userId;
+  VoidCallback onSignedOut;
+  BaseAuth auth;
+
+  HomePageState(this.auth, this.userId, this.onSignedOut);
 
   //bool pressAttention = false;
   //double duration = 1;
@@ -88,10 +105,10 @@ class HomePageState extends State<HomePage> {
   Future<String> getData(date) async {
     var client = new http.Client();
     String jsonData =
-        await DefaultAssetBundle.of(context).loadString("assets/data.json");
+    await DefaultAssetBundle.of(context).loadString("assets/data.json");
     final jsonResult = json.decode(jsonData);
     String jsonData0 =
-        await DefaultAssetBundle.of(context).loadString("assets/nasdaq.json");
+    await DefaultAssetBundle.of(context).loadString("assets/nasdaq.json");
     final jsonResult0 = json.decode(jsonData0);
     _names = [];
     for (var item in jsonResult0) {
@@ -107,10 +124,10 @@ class HomePageState extends State<HomePage> {
     for (var item in stocks) {
       await client
           .get(
-              "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=" +
-                  item +
-                  "&interval=5min&outputsize=full&apikey=" +
-                  api)
+          "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=" +
+              item +
+              "&interval=5min&outputsize=full&apikey=" +
+              api)
           .then((response) {
         tempData = [];
         map = json.decode(response.body);
@@ -211,10 +228,10 @@ class HomePageState extends State<HomePage> {
               placeholder: 'Search',
               results: names
                   .map((String v) => new MaterialSearchResult<String>(
-                        //icon: Icons.person,
-                        value: v,
-                        text: "$v",
-                      ))
+                //icon: Icons.person,
+                value: v,
+                text: "$v",
+              ))
                   .toList(),
               filter: (dynamic value, String criteria) {
                 return value.toLowerCase().trim().contains(
@@ -272,106 +289,74 @@ class HomePageState extends State<HomePage> {
         child: _isLoading
             ? new CircularProgressIndicator()
             : new RefreshIndicator(
-                onRefresh: _refreshStockPrices,
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        children: <Widget>[
+            onRefresh: _refreshStockPrices,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Column(
+                    //crossAxisAlignment: CrossAxisAlignment.start,
+                    //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _mainChart('Trading', data),
+                      _mainChart('Investing', watchVal),
+                      _mainChart('Watch List', watchVal),
+                      Container(
+                        color: Colors.blueGrey,
+                        child: Row(children: <Widget>[
                           Expanded(
-                            child: Container(
-                              color: Colors.grey[350],
-                              child: Column(children: <Widget>[
-                                Expanded(
-                                  flex: 1,
-                                  child: IconButton(
-                                    icon: new Icon(Icons.home),
-                                    onPressed: () {},
-                                    iconSize: 28,
-                                    padding: const EdgeInsets.all(16),
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: IconButton(
-                                    icon: new Icon(Icons.account_circle),
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => AccountRoute()),
-                                      );
-                                    },
-                                    padding: const EdgeInsets.all(16),
-                                    iconSize: 28,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: IconButton(
-                                    icon: new Icon(Icons.mail_outline),
-                                    onPressed: () {},
-                                    iconSize: 28,
-                                    padding: const EdgeInsets.all(16),
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: IconButton(
-                                    icon: new Icon(Icons.settings),
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => SettingsRoute()),
-                                      );
-                                    },
-                                    iconSize: 28,
-                                    padding: const EdgeInsets.all(16),
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 6,
-                                  child: IconButton(
-                                    icon: new Icon(Icons.search),
-                                    alignment: Alignment.bottomCenter,
-                                    onPressed: () {
-                                      _showMaterialSearch(context);
-                                    },
-                                    iconSize: 28,
-                                    padding: const EdgeInsets.all(16),
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Container(),
-                                ),
-                              ]),
+                            child: IconButton(
+                              icon: new Icon(Icons.account_circle),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => AccountRoute(auth, userId, onSignedOut)),
+                                );
+                              },
+                              iconSize: 28,
+                              color: Colors.white,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      flex: 6,
-                      child: Column(
-                        //crossAxisAlignment: CrossAxisAlignment.start,
-                        //mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _mainChart('Trading', data),
-                          _mainChart('Investing', watchVal),
-                          _mainChart('Watch List', watchVal),
-                        ],
-                      ),
-                    ),
-                  ],
-                )),
+                          Expanded(
+                            child: IconButton(
+                              icon: new Icon(Icons.mail_outline),
+                              onPressed: () {},
+                              iconSize: 28,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Expanded(
+                            child: IconButton(
+                              icon: new Icon(Icons.settings),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => SettingsRoute()),
+                                );
+                              },
+                              iconSize: 28,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Expanded(
+                            child: IconButton(
+                              icon: new Icon(Icons.search),
+                              alignment: Alignment.bottomCenter,
+                              onPressed: () {
+                                _showMaterialSearch(context);
+                              },
+                              iconSize: 28,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ]),
+                      )
+                    ],
+                  ),
+                ),
+              ],
+            )),
         //RefreshIndicator(child: null, onRefresh: null),
       ),
     );
@@ -430,7 +415,7 @@ class HomePageState extends State<HomePage> {
                                 ? "\$" + last.toStringAsFixed(2)
                                 : "",
                             style: TextStyle(
-                                //fontWeight: FontWeight.bold,
+                              //fontWeight: FontWeight.bold,
                                 color: Colors.greenAccent,
                                 fontSize: 26.0),
                           ),
@@ -454,11 +439,11 @@ class HomePageState extends State<HomePage> {
                             onPressed: () {
                               if (title == 'Investing') {
                                 Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
+                                    context,
+                                    MaterialPageRoute(
                                       builder: (context) => InvestingRoute(
                                           title, mainData, stocks, quant, subData),
-                                ));
+                                    ));
                               } else if (title == 'Trading') {
                                 Navigator.push(
                                     context,
@@ -483,10 +468,10 @@ class HomePageState extends State<HomePage> {
                     ],
                   ),
                   Expanded(
-                      child: Sparkline(
-                    data: lineData,
-                    lineColor: Colors.greenAccent,
-                  ))
+                      child: new Sparkline(
+                        data: lineData,
+                        lineColor: Colors.greenAccent,
+                      ))
                 ]))));
   }
 }

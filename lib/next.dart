@@ -1,17 +1,38 @@
 import 'main.dart';
 import 'package:flutter/material.dart';
+import 'services/authentication.dart';
+import 'services/firestoreType.dart';
+
 
 class NextPage extends StatefulWidget {
+  NextPage({Key key, this.auth, this.userId, this.onSignedOut})
+      : super(key: key);
+  final BaseAuth auth;
+  final VoidCallback onSignedOut;
+  final userId;
+
   @override
-  State<StatefulWidget> createState() => new _NextPageState();
+  State<StatefulWidget> createState() => new _NextPageState(this.userId);
 }
 
 class _NextPageState extends State<NextPage> {
-  String _status = 'no-action';
+
+  BaseAuth auth;
+  FirebaseFirestoreService db = new FirebaseFirestoreService();
+  String userId;
+  final _formKey = new GlobalKey<FormState>();
   int _radioValue1 = -1;
   int _radioValue2 = -1;
   bool vis0 = false;
   bool vis1 = false;
+
+  _NextPageState(this.userId);
+
+  @override
+  void initState() {
+    super.initState();
+    //final userId = auth.getCurrentUser();
+  }
 
   void _handleRadioValueChange1(int value) {
     setState(() {
@@ -61,6 +82,16 @@ class _NextPageState extends State<NextPage> {
     });
   }
 
+  bool _validateAndSave() {
+    if (_radioValue1 != -1 && _radioValue2 != -1) {
+      db.createType(userId, _radioValue1, _radioValue2);
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/bank', (_) => false);
+      return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) => new Scaffold(
         body: new Container(
@@ -85,238 +116,255 @@ class _NextPageState extends State<NextPage> {
               Expanded(
                   flex: 4,
                   child: Center(
-                      child: ScrollConfiguration(
-                          behavior: MyBehavior(),
-                          child: ListView(
-                            shrinkWrap: true,
-                            children: <Widget>[
-                              Container(
-                                margin: EdgeInsets.only(
-                                    left: MediaQuery.of(context).size.width *
-                                        0.10,
-                                    right: MediaQuery.of(context).size.width *
-                                        0.10,
-                                    bottom: 4.0),
-                                //padding: EdgeInsets.all(2.0),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    width: 1.0,
-                                    color: Colors.grey,
-                                  ),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(4.0),
-                                  ),
-                                ),
-                                child: new Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: <Widget>[
-                                    new Radio(
-                                      value: 0,
-                                      groupValue: _radioValue1,
-                                      onChanged: _handleRadioValueChange1,
-                                      activeColor: Colors.greenAccent,
-                                    ),
-                                    new Text(
-                                      'Investing',
-                                      style: new TextStyle(fontSize: 16.0),
-                                    ),
-                                    new Radio(
-                                      value: 1,
-                                      groupValue: _radioValue1,
-                                      onChanged: _handleRadioValueChange1,
-                                      activeColor: Colors.greenAccent,
-                                    ),
-                                    new Text(
-                                      'Trading  ',
-                                      style: new TextStyle(
-                                        fontSize: 16.0,
+                      child: new Form(
+                          key: _formKey,
+                          child: ScrollConfiguration(
+                              behavior: MyBehavior(),
+                              child: ListView(
+                                shrinkWrap: true,
+                                children: <Widget>[
+                                  Container(
+                                    margin: EdgeInsets.only(
+                                        left:
+                                            MediaQuery.of(context).size.width *
+                                                0.10,
+                                        right:
+                                            MediaQuery.of(context).size.width *
+                                                0.10,
+                                        bottom: 4.0),
+                                    //padding: EdgeInsets.all(2.0),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        width: 1.0,
+                                        color: Colors.grey,
+                                      ),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(4.0),
                                       ),
                                     ),
-                                    new Radio(
-                                      value: 2,
-                                      groupValue: _radioValue1,
-                                      onChanged: _handleRadioValueChange1,
-                                      activeColor: Colors.greenAccent,
-                                    ),
-                                    new Text(
-                                      'Both     ',
-                                      style: new TextStyle(fontSize: 16.0),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Visibility(
-                                child: Container(
-                                  margin: EdgeInsets.only(
-                                      left: MediaQuery.of(context).size.width *
-                                          0.10,
-                                      right: MediaQuery.of(context).size.width *
-                                          0.10,
-                                      bottom: 4.0),
-                                  padding: EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      width: 1.0,
-                                      color: Colors.grey,
-                                    ),
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(4.0),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: <Widget>[
-                                      Text(
-                                        "Investing",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 24,
-                                          color: Colors.greenAccent,
+                                    child: new Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: <Widget>[
+                                        new Radio(
+                                          value: 0,
+                                          groupValue: _radioValue1,
+                                          onChanged: _handleRadioValueChange1,
+                                          activeColor: Colors.greenAccent,
                                         ),
-                                      ),
-                                      Text(
-                                        "How much do you want to start out investing?",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 16,
+                                        new Text(
+                                          'Investing',
+                                          style: new TextStyle(fontSize: 16.0),
+                                        ),
+                                        new Radio(
+                                          value: 1,
+                                          groupValue: _radioValue1,
+                                          onChanged: _handleRadioValueChange1,
+                                          activeColor: Colors.greenAccent,
+                                        ),
+                                        new Text(
+                                          'Trading  ',
+                                          style: new TextStyle(
+                                            fontSize: 16.0,
+                                          ),
+                                        ),
+                                        new Radio(
+                                          value: 2,
+                                          groupValue: _radioValue1,
+                                          onChanged: _handleRadioValueChange1,
+                                          activeColor: Colors.greenAccent,
+                                        ),
+                                        new Text(
+                                          'Both     ',
+                                          style: new TextStyle(fontSize: 16.0),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Visibility(
+                                    child: Container(
+                                      margin: EdgeInsets.only(
+                                          left: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.10,
+                                          right: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.10,
+                                          bottom: 4.0),
+                                      padding: EdgeInsets.all(8.0),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          width: 1.0,
                                           color: Colors.grey,
                                         ),
-                                      ),
-                                      new Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: <Widget>[
-                                            new Radio(
-                                              value: 0,
-                                              groupValue: _radioValue2,
-                                              onChanged:
-                                                  _handleRadioValueChange2,
-                                              activeColor: Colors.greenAccent,
-                                            ),
-                                            new Text(
-                                              '\$250',
-                                              style:
-                                                  new TextStyle(fontSize: 16.0),
-                                            ),
-                                          ]),
-                                      new Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: <Widget>[
-                                            new Radio(
-                                              value: 1,
-                                              groupValue: _radioValue2,
-                                              onChanged:
-                                                  _handleRadioValueChange2,
-                                              activeColor: Colors.greenAccent,
-                                            ),
-                                            new Text(
-                                              '\$500',
-                                              style:
-                                                  new TextStyle(fontSize: 16.0),
-                                            ),
-                                          ]),
-                                      new Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: <Widget>[
-                                            new Radio(
-                                              value: 2,
-                                              groupValue: _radioValue2,
-                                              onChanged:
-                                                  _handleRadioValueChange2,
-                                              activeColor: Colors.greenAccent,
-                                            ),
-                                            new Text(
-                                              '\$750',
-                                              style:
-                                                  new TextStyle(fontSize: 16.0),
-                                            ),
-                                          ]),
-                                      new Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: <Widget>[
-                                            new Radio(
-                                              value: 3,
-                                              groupValue: _radioValue2,
-                                              onChanged:
-                                                  _handleRadioValueChange2,
-                                              activeColor: Colors.greenAccent,
-                                            ),
-                                            new Text(
-                                              '\$1,000',
-                                              style:
-                                                  new TextStyle(fontSize: 16.0),
-                                            ),
-                                          ]),
-                                      new Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: <Widget>[
-                                            new Radio(
-                                              value: 4,
-                                              groupValue: _radioValue2,
-                                              onChanged:
-                                                  _handleRadioValueChange2,
-                                              activeColor: Colors.greenAccent,
-                                            ),
-                                            new Text(
-                                              '\$1,000+',
-                                              style:
-                                                  new TextStyle(fontSize: 16.0),
-                                            ),
-                                          ]),
-                                    ],
-                                  ),
-                                ),
-                                maintainAnimation: true,
-                                maintainState: true,
-                                visible: vis0,
-                              ),
-                              Visibility(
-                                child: Container(
-                                  margin: EdgeInsets.only(
-                                      left: MediaQuery.of(context).size.width *
-                                          0.10,
-                                      right: MediaQuery.of(context).size.width *
-                                          0.10,
-                                      bottom: 4.0),
-                                  padding: EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      width: 1.0,
-                                      color: Colors.grey,
-                                    ),
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(4.0),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: <Widget>[
-                                      Text(
-                                        "Trading",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 24,
-                                          color: Colors.greenAccent,
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(4.0),
                                         ),
                                       ),
-                                      Text(
-                                        "Great! Everyone starts out at the \$250 level with opportunity to move up based on performance.\n\n "
-                                            "You will be required to deposit \$25 to insure the funds you're trading.",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 16,
+                                      child: Column(
+                                        children: <Widget>[
+                                          Text(
+                                            "Investing",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 24,
+                                              color: Colors.greenAccent,
+                                            ),
+                                          ),
+                                          Text(
+                                            "How much do you want to start out investing?",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 16,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          new Row(
+                                              //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: <Widget>[
+                                                new Radio(
+                                                  value: 0,
+                                                  groupValue: _radioValue2,
+                                                  onChanged:
+                                                      _handleRadioValueChange2,
+                                                  activeColor:
+                                                      Colors.greenAccent,
+                                                ),
+                                                new Text(
+                                                  '\$250',
+                                                  style: new TextStyle(
+                                                      fontSize: 16.0),
+                                                ),
+                                              ]),
+                                          new Row(
+                                              //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: <Widget>[
+                                                new Radio(
+                                                  value: 1,
+                                                  groupValue: _radioValue2,
+                                                  onChanged:
+                                                      _handleRadioValueChange2,
+                                                  activeColor:
+                                                      Colors.greenAccent,
+                                                ),
+                                                new Text(
+                                                  '\$500',
+                                                  style: new TextStyle(
+                                                      fontSize: 16.0),
+                                                ),
+                                              ]),
+                                          new Row(
+                                              //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: <Widget>[
+                                                new Radio(
+                                                  value: 2,
+                                                  groupValue: _radioValue2,
+                                                  onChanged:
+                                                      _handleRadioValueChange2,
+                                                  activeColor:
+                                                      Colors.greenAccent,
+                                                ),
+                                                new Text(
+                                                  '\$750',
+                                                  style: new TextStyle(
+                                                      fontSize: 16.0),
+                                                ),
+                                              ]),
+                                          new Row(
+                                              //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: <Widget>[
+                                                new Radio(
+                                                  value: 3,
+                                                  groupValue: _radioValue2,
+                                                  onChanged:
+                                                      _handleRadioValueChange2,
+                                                  activeColor:
+                                                      Colors.greenAccent,
+                                                ),
+                                                new Text(
+                                                  '\$1,000',
+                                                  style: new TextStyle(
+                                                      fontSize: 16.0),
+                                                ),
+                                              ]),
+                                          new Row(
+                                              //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: <Widget>[
+                                                new Radio(
+                                                  value: 4,
+                                                  groupValue: _radioValue2,
+                                                  onChanged:
+                                                      _handleRadioValueChange2,
+                                                  activeColor:
+                                                      Colors.greenAccent,
+                                                ),
+                                                new Text(
+                                                  '\$1,000+',
+                                                  style: new TextStyle(
+                                                      fontSize: 16.0),
+                                                ),
+                                              ]),
+                                        ],
+                                      ),
+                                    ),
+                                    maintainAnimation: true,
+                                    maintainState: true,
+                                    visible: vis0,
+                                  ),
+                                  Visibility(
+                                    child: Container(
+                                      margin: EdgeInsets.only(
+                                          left: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.10,
+                                          right: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.10,
+                                          bottom: 4.0),
+                                      padding: EdgeInsets.all(8.0),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          width: 1.0,
                                           color: Colors.grey,
                                         ),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(4.0),
+                                        ),
                                       ),
-                                    ],
+                                      child: Column(
+                                        children: <Widget>[
+                                          Text(
+                                            "Trading",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 24,
+                                              color: Colors.greenAccent,
+                                            ),
+                                          ),
+                                          Text(
+                                            "Great! Everyone starts out at the \$250 level with opportunity to move up based on performance.\n\n "
+                                                "You will be required to deposit \$25 to insure the funds you're trading.",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 16,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    maintainAnimation: true,
+                                    maintainState: true,
+                                    visible: vis1,
                                   ),
-                                ),
-                                maintainAnimation: true,
-                                maintainState: true,
-                                visible: vis1,
-                              ),
-                            ],
-                          )))),
+                                ],
+                              ))))),
               Container(
-                color: Colors.greenAccent,
+                color: Colors.blueGrey,
                 child: Row(children: <Widget>[
                   Expanded(
                     child: FlatButton(
@@ -329,11 +377,10 @@ class _NextPageState extends State<NextPage> {
                             color: Colors.white,
                           ),
                         ),
-                        color: Colors.greenAccent,
-                        onPressed: () {
-                          Navigator.of(context)
-                              .pushReplacementNamed('/bank');
-                          /*                setState(() => this._status = 'loading');
+                        color: Colors.blueGrey,
+                        onPressed: _validateAndSave /*() {
+                          Navigator.of(context).pushReplacementNamed('/bank');
+                                          setState(() => this._status = 'loading');
                       appAuth.login().then((result) {
                         if (result) {
                           Navigator.of(context)
@@ -341,8 +388,8 @@ class _NextPageState extends State<NextPage> {
                         } else {
                           setState(() => this._status = 'rejected');
                         }
-                      });*/
-                        }),
+                      });
+                        }*/),
                   )
                 ]),
               )
